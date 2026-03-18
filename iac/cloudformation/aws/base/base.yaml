@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Base CloudFormation stack for ${{ values.client_name }}
+
+Parameters:
+  ClientName:
+    Type: String
+    Default: "${{ values.client_name }}"
+    Description: Name of the client
+
+  AWSRegion:
+    Type: String
+    Default: "${{ values.aws_region }}"
+    Description: AWS Region for deployment
+
+Tags:
+  - Key: client
+    Value: !Ref ClientName
+  - Key: managed-by
+    Value: backstage

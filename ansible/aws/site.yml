@@ -1,0 +1,142 @@
+---
+# ============================================================
+# Ansible Playbook for ${{ values.client_name }}
+# Region: ${{ values.aws_region }}
+# Managed by Backstage — run: ansible-playbook site.yml
+#
+# Variables at the top control what gets provisioned.
+# Set each "provision_*" variable to true or false.
+# ============================================================
+
+- name: Provision AWS Infrastructure for ${{ values.client_name }}
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    # ── Client Info ─────────────────────────
+    client_name: "${{ values.client_name }}"
+    aws_region: "${{ values.aws_region }}"
+
+    # ── Toggle resources on/off ─────────────
+    provision_vpc: ${{ values.provision_vpc | default(false) }}
+    provision_ec2: ${{ values.provision_ec2 | default(false) }}
+    provision_s3: ${{ values.provision_s3 | default(false) }}
+    provision_rds: ${{ values.provision_rds | default(false) }}
+
+    # ── VPC Config ──────────────────────────
+    vpc_cidr: "${{ values.vpc_cidr | default('10.0.0.0/16') }}"
+
+    # ── EC2 Config ──────────────────────────
+    ec2_instance_type: "${{ values.ec2_instance_type | default('t2.micro') }}"
+
+    # ── S3 Config ───────────────────────────
+    s3_versioning: ${{ values.s3_versioning | default(false) }}
+
+    # ── RDS Config ──────────────────────────
+    rds_engine: "${{ values.rds_engine | default('mysql') }}"
+    db_port: "{{ '3306' if rds_engine == 'mysql' else '5432' }}"
+
+  tasks:
+
+    # ── VPC ─────────────────────────────────
+    - name: Create VPC
+      when: provision_vpc
+      amazon.aws.ec2_vpc_net:
+        name: "{{ client_name }}-vpc"
+        cidr_block: "{{ vpc_cidr }}"
+        region: "{{ aws_region }}"
+        dns_support: true
+        dns_hostnames: true
+        tags:
+          client: "{{ client_name }}"
+          managed-by: ansible
+      register: vpc
+
+    - name: Create public subnet
+      when: provision_vpc
+      amazon.aws.ec2_vpc_subnet:
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: "{{ vpc_cidr | ipsubnet(24, 0) }}"
+        region: "{{ aws_region }}"
+        map_public: true
+        tags:
+          Name: "{{ client_name }}-public-subnet"
+      register: subnet
+
+    - name: Create Internet Gateway
+      when: provision_vpc
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ aws_region }}"
+        tags:
+          Name: "{{ client_name }}-igw"
+
+    # ── EC2 ─────────────────────────────────
+    - name: Create EC2 security group
+      when: provision_ec2
+      amazon.aws.ec2_security_group:
+        name: "{{ client_name }}-ec2-sg"
+        description: "Security group for {{ client_name }} EC2"
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports: [22, 80, 443]
+            cidr_ip: 0.0.0.0/0
+        tags:
+          client: "{{ client_name }}"
+      register: sg
+
+    - name: Launch EC2 instance
+      when: provision_ec2
+      amazon.aws.ec2_instance:
+        name: "{{ client_name }}-ec2"
+        instance_type: "{{ ec2_instance_type }}"
+        region: "{{ aws_region }}"
+        security_groups:
+          - "{{ sg.group_id }}"
+        tags:
+          client: "{{ client_name }}"
+          managed-by: ansible
+        wait: true
+      register: ec2
+
+    # ── S3 ──────────────────────────────────
+    - name: Create S3 bucket
+      when: provision_s3
+      amazon.aws.s3_bucket:
+        name: "{{ client_name }}-bucket"
+        region: "{{ aws_region }}"
+        versioning: "{{ s3_versioning }}"
+        encryption: AES256
+        tags:
+          client: "{{ client_name }}"
+          managed-by: ansible
+
+    # ── RDS ─────────────────────────────────
+    - name: Provision RDS instance
+      when: provision_rds
+      amazon.aws.rds_instance:
+        db_instance_identifier: "{{ client_name }}-db"
+        db_instance_class: db.t3.micro
+        engine: "{{ rds_engine }}"
+        master_username: admin
+        master_user_password: "{{ lookup('env', 'DB_PASSWORD') }}"
+        allocated_storage: 20
+        storage_encrypted: true
+        region: "{{ aws_region }}"
+        tags:
+          client: "{{ client_name }}"
+          managed-by: ansible
+        wait: true
+      register: rds
+
+    # ── Summary ─────────────────────────────
+    - name: Provisioning complete
+      debug:
+        msg:
+          - "Client: {{ client_name }}"
+          - "VPC ID:       {{ vpc.vpc.id          | default('not provisioned') }}"
+          - "EC2 IP:       {{ ec2.instances[0].public_ip_address | default('not provisioned') }}"
+          - "S3 Bucket:    {{ client_name }}-bucket{{ '' if provision_s3 else ' (not provisioned)' }}"
+          - "RDS Endpoint: {{ rds.endpoint.address | default('not provisioned') }}"

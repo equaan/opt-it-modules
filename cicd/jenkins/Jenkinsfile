@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+
+    environment {
+        CLIENT_NAME = "${params.client_name}"
+        AWS_REGION  = "${params.aws_region ?: 'us-east-1'}"
+    }
+
+    parameters {
+        string(name: 'client_name', defaultValue: '', description: 'Name of the client')
+        string(name: 'aws_region',  defaultValue: 'us-east-1', description: 'AWS region')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+            post {
+                always {
+                    junit 'test-results/**/*.xml'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'aws-credentials']]) {
+                    sh '''
+                        echo "Deploying for client: ${CLIENT_NAME} in region: ${AWS_REGION}"
+                        # Add your deploy commands here
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline succeeded for client: ${CLIENT_NAME}"
+        }
+        failure {
+            echo "Pipeline failed for client: ${CLIENT_NAME}"
+            // Add notification (email/Slack) here
+        }
+    }
+}
