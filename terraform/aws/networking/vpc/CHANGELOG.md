@@ -18,3 +18,7 @@ This module follows [Semantic Versioning](https://semver.org/).
 - Input validation for environment (dev / staging / prod only)
 - Input validation for vpc_cidr (must be valid CIDR)
 - Outputs: vpc_id, vpc_cidr, internet_gateway_id, nat_gateway_id, nat_gateway_public_ip, name_prefix, standard_tags
+
+---
+
+[1.0.0]: https://github.com/equaan/opt-it-modules/releases/tag/terraform-aws-vpc-v1.0.0
