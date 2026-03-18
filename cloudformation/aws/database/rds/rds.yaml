@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: RDS instance stack for ${{ values.client_name }}
+
+Parameters:
+  ClientName:
+    Type: String
+    Default: "${{ values.client_name }}"
+
+  RDSEngine:
+    Type: String
+    Default: "${{ values.rds_engine }}"
+    AllowedValues:
+      - mysql
+      - postgres
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+
+  DBUsername:
+    Type: String
+    Default: admin
+    NoEcho: true
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Must be at least 8 characters
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+
+Conditions:
+  IsMySQL: !Equals [!Ref RDSEngine, mysql]
+
+Resources:
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "Security group for ${ClientName} RDS"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !If [IsMySQL, 3306, 5432]
+          ToPort: !If [IsMySQL, 3306, 5432]
+          CidrIp: 10.0.0.0/8
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClientName}-rds-sg"
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub "${ClientName}-db"
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: !Ref RDSEngine
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      Tags:
+        - Key: client
+          Value: !Ref ClientName
+
+Outputs:
+  RDSEndpoint:
+    Description: RDS Endpoint
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Export:
+      Name: !Sub "${ClientName}-rds-endpoint"
