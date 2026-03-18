@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: S3 bucket stack for ${{ values.client_name }}
+
+Parameters:
+  ClientName:
+    Type: String
+    Default: "${{ values.client_name }}"
+
+  EnableVersioning:
+    Type: String
+    Default: "${{ values.s3_versioning }}"
+    AllowedValues:
+      - "true"
+      - "false"
+
+Conditions:
+  IsVersioningEnabled: !Equals [!Ref EnableVersioning, "true"]
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ClientName}-bucket"
+      VersioningConfiguration:
+        Status: !If [IsVersioningEnabled, Enabled, Suspended]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: client
+          Value: !Ref ClientName
+
+Outputs:
+  BucketName:
+    Description: S3 Bucket Name
+    Value: !Ref S3Bucket
+    Export:
+      Name: !Sub "${ClientName}-bucket-name"
