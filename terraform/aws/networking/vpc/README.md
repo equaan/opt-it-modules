@@ -1,5 +1,7 @@
 # terraform-aws-vpc
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/equaan/opt-it-modules/releases/tag/terraform-aws-vpc-v1.0.0)
+
 Provisions a production-grade AWS VPC for an Opt IT client environment.
 
 Includes an Internet Gateway, optional NAT Gateway, and a locked-down default security group. All resources follow Opt IT standard tagging conventions.
