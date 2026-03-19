@@ -1,0 +1,33 @@
+name: Create Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name to create (e.g. terraform-aws-vpc-v1.0.0)'
+        required: true
+        default: 'terraform-aws-vpc-v1.0.0'
+      ref:
+        description: 'Branch or commit SHA to tag (defaults to main)'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 0
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ github.event.inputs.tag }}" -m "Release ${{ github.event.inputs.tag }}"
+          git push origin "${{ github.event.inputs.tag }}"
