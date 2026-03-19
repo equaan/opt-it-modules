@@ -354,6 +354,16 @@ url: https://github.com/equaan/opt-it-modules/tree/main/terraform/aws/networking
 | Blob Storage | `terraform/azure/storage/blob` | `v1.0.0` | `terraform-azure-blob-storage-v1.0.0` |
 | SQL Flexible | `terraform/azure/database/sql-flexible` | `v1.0.0` | `terraform-azure-sql-flexible-v1.0.0` |
 
+### Terraform — GCP
+
+| Module | Path | Version | Tag |
+|---|---|---|---|
+| VPC | `terraform/GCP/networking/vpc` | `v1.0.0` | `terraform-gcp-vpc-v1.0.0` |
+| Firewall | `terraform/GCP/networking/firewall` | `v1.0.0` | `terraform-gcp-firewall-v1.0.0` |
+| GCE | `terraform/GCP/compute/gce` | `v1.0.0` | `terraform-gcp-gce-v1.0.0` |
+| GCS | `terraform/GCP/storage/gcs` | `v1.0.0` | `terraform-gcp-gcs-v1.0.0` |
+| Cloud SQL | `terraform/GCP/database/cloud-sql` | `v1.0.0` | `terraform-gcp-cloud-sql-v1.0.0` |
+
 ---
 
 ## Standard Tags
@@ -426,6 +436,7 @@ RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in
 |---|---|---|
 | Phase 1 | ✅ Complete | AWS Terraform modules (VPC, Subnets, SGs, EC2, S3, RDS, IAM) |
 | Phase 2 | ✅ Complete | Azure Terraform modules (Resource Group, VNet, NSG, VM, Blob, SQL Flexible) |
+| Phase 2b | ✅ Complete | GCP Terraform modules + GcpResourcePicker + gcp-infrastructure template |
 | Phase 3 | 🔜 Planned | Observability (Prometheus, Grafana, Datadog) |
 | Phase 4 | 🔜 Planned | Security (Vault, SOPS, OPA) |
 | Phase 5 | 🔜 Planned | Full onboarding wizard, drift detection, cost estimation |
