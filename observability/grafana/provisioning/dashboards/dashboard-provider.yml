@@ -1,0 +1,17 @@
+# ================================================================
+# Grafana Dashboard Provider
+# Auto-loads dashboards from /etc/grafana/dashboards/
+# ================================================================
+
+apiVersion: 1
+
+providers:
+  - name: 'Opt IT Dashboards'
+    orgId: 1
+    folder: '${{ values.client_name }}'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards
