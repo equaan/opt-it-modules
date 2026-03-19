@@ -23,49 +23,25 @@ variable "environment" {
 }
 
 variable "module_version" {
-  description = "Version of this module being used. Injected by the Backstage template. Example: 1.0.0"
+  description = "Version of this module being used. Injected by the Backstage template."
   type        = string
   default     = "1.0.0"
 }
 
 # ─────────────────────────────────────────────────────────────
-# S3 CONFIGURATION
+# IAM CONFIGURATION
 # ─────────────────────────────────────────────────────────────
 
-variable "bucket_suffix" {
-  description = "Optional suffix appended to the bucket name for uniqueness. Example: assets, backups, uploads"
-  type        = string
-  default     = "storage"
-}
-
-variable "enable_versioning" {
-  description = "Whether to enable S3 versioning. Recommended for prod. Allows recovery of deleted or overwritten objects."
+variable "create_ec2_role" {
+  description = "Whether to create an IAM role for EC2 instances (instance profile). Allows EC2 to call AWS APIs."
   type        = bool
-  default     = false
+  default     = true
 }
 
-variable "enable_lifecycle_rules" {
-  description = "Whether to enable lifecycle rules to transition old versions to cheaper storage and expire them."
-  type        = bool
-  default     = false
-}
-
-variable "noncurrent_version_transition_days" {
-  description = "Days after which noncurrent versions are transitioned to STANDARD_IA. Only applies if lifecycle rules are enabled."
-  type        = number
-  default     = 30
-}
-
-variable "noncurrent_version_expiration_days" {
-  description = "Days after which noncurrent versions are permanently deleted. Only applies if lifecycle rules are enabled."
-  type        = number
-  default     = 90
-}
-
-variable "force_destroy" {
-  description = "Whether to allow the bucket to be destroyed even if it contains objects. Set to false for prod."
-  type        = bool
-  default     = false
+variable "ec2_s3_bucket_arns" {
+  description = "List of S3 bucket ARNs the EC2 role should have read/write access to. Example: [\"arn:aws:s3:::my-bucket\", \"arn:aws:s3:::my-bucket/*\"]"
+  type        = list(string)
+  default     = []
 }
 
 variable "additional_tags" {
