@@ -343,6 +343,17 @@ url: https://github.com/equaan/opt-it-modules/tree/main/terraform/aws/networking
 | RDS | `terraform/aws/database/rds` | `v1.0.0` | `terraform-aws-rds-v1.0.0` |
 | IAM Baseline | `terraform/aws/iam/baseline` | `v1.0.0` | `terraform-aws-iam-baseline-v1.0.0` |
 
+### Terraform — Azure
+
+| Module | Path | Version | Tag |
+|---|---|---|---|
+| Resource Group | `terraform/azure/base/resource-group` | `v1.0.0` | `terraform-azure-resource-group-v1.0.0` |
+| VNet | `terraform/azure/networking/vnet` | `v1.0.0` | `terraform-azure-vnet-v1.0.0` |
+| NSG | `terraform/azure/networking/nsg` | `v1.0.0` | `terraform-azure-nsg-v1.0.0` |
+| VM | `terraform/azure/compute/vm` | `v1.0.0` | `terraform-azure-vm-v1.0.0` |
+| Blob Storage | `terraform/azure/storage/blob` | `v1.0.0` | `terraform-azure-blob-storage-v1.0.0` |
+| SQL Flexible | `terraform/azure/database/sql-flexible` | `v1.0.0` | `terraform-azure-sql-flexible-v1.0.0` |
+
 ---
 
 ## Standard Tags
@@ -414,7 +425,7 @@ RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in
 | Phase | Status | Scope |
 |---|---|---|
 | Phase 1 | ✅ Complete | AWS Terraform modules (VPC, Subnets, SGs, EC2, S3, RDS, IAM) |
-| Phase 2 | 🔜 Planned | Azure + GCP Terraform modules, EKS |
+| Phase 2 | ✅ Complete | Azure Terraform modules (Resource Group, VNet, NSG, VM, Blob, SQL Flexible) |
 | Phase 3 | 🔜 Planned | Observability (Prometheus, Grafana, Datadog) |
 | Phase 4 | 🔜 Planned | Security (Vault, SOPS, OPA) |
 | Phase 5 | 🔜 Planned | Full onboarding wizard, drift detection, cost estimation |
