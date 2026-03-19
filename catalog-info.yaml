@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: opt-it-catalog
+  description: Opt IT Backstage Template Catalog
+spec:
+  targets:
+    - ./templates/aws-infrastructure/template.yaml
