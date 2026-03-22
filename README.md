@@ -437,6 +437,6 @@ RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in
 | Phase 1 | ✅ Complete | AWS Terraform modules (VPC, Subnets, SGs, EC2, S3, RDS, IAM) |
 | Phase 2 | ✅ Complete | Azure Terraform modules (Resource Group, VNet, NSG, VM, Blob, SQL Flexible) |
 | Phase 2b | ✅ Complete | GCP Terraform modules + GcpResourcePicker + gcp-infrastructure template |
-| Phase 3 | 🔜 Planned | Observability (Prometheus, Grafana, Datadog) |
+| Phase 3 | ✅ Complete | CI/CD modules (GitHub Actions, Jenkins, GitLab CI, ArgoCD) + Observability (Prometheus, Grafana, Alertmanager) |
 | Phase 4 | 🔜 Planned | Security (Vault, SOPS, OPA) |
 | Phase 5 | 🔜 Planned | Full onboarding wizard, drift detection, cost estimation |
