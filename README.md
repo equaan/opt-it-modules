@@ -457,4 +457,4 @@ RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in
 | Phase 2b | ✅ Complete | GCP Terraform modules + GcpResourcePicker + gcp-infrastructure template |
 | Phase 3 | ✅ Complete | CI/CD modules (GitHub Actions, Jenkins, GitLab CI, ArgoCD) + Observability (Prometheus, Grafana, Alertmanager) |
 | Phase 4 | ✅ Complete | Security (Trivy, OWASP) + Containers (Dockerfile, Docker Compose, K8s, Helm) |
-| Phase 5 | 🔜 Planned | Full onboarding wizard, drift detection, cost estimation |
+| Phase 5 | ✅ Complete | Full Client Onboarding Wizard — single template combining all phases |
