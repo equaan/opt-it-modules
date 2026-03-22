@@ -364,6 +364,24 @@ url: https://github.com/equaan/opt-it-modules/tree/main/terraform/aws/networking
 | GCS | `terraform/GCP/storage/gcs` | `v1.0.0` | `terraform-gcp-gcs-v1.0.0` |
 | Cloud SQL | `terraform/GCP/database/cloud-sql` | `v1.0.0` | `terraform-gcp-cloud-sql-v1.0.0` |
 
+### Security
+
+| Module | Path | Purpose |
+|---|---|---|
+| Trivy Config | `security/trivy/` | Vulnerability scanning config |
+| Trivy Workflow | `security/github-actions/` | GitHub Actions scan workflow |
+| OWASP Workflow | `security/owasp/workflow/` | Dependency check workflow |
+| OWASP Config | `security/owasp/config/` | Suppressions config |
+
+### Containers
+
+| Module | Path | Purpose |
+|---|---|---|
+| Dockerfiles | `containers/dockerfiles/` | Node.js, Python, Java, Go multi-stage builds |
+| Docker Compose | `containers/docker-compose/` | Local dev stack |
+| Kubernetes | `containers/kubernetes/base/` | Namespace, Deployment, Service, Ingress, HPA, ConfigMap, Secret |
+| Helm | `containers/helm/` | Helm chart wrapping K8s manifests |
+
 ---
 
 ## Standard Tags
@@ -438,5 +456,5 @@ RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in
 | Phase 2 | ✅ Complete | Azure Terraform modules (Resource Group, VNet, NSG, VM, Blob, SQL Flexible) |
 | Phase 2b | ✅ Complete | GCP Terraform modules + GcpResourcePicker + gcp-infrastructure template |
 | Phase 3 | ✅ Complete | CI/CD modules (GitHub Actions, Jenkins, GitLab CI, ArgoCD) + Observability (Prometheus, Grafana, Alertmanager) |
-| Phase 4 | 🔜 Planned | Security (Vault, SOPS, OPA) |
+| Phase 4 | ✅ Complete | Security (Trivy, OWASP) + Containers (Dockerfile, Docker Compose, K8s, Helm) |
 | Phase 5 | 🔜 Planned | Full onboarding wizard, drift detection, cost estimation |
