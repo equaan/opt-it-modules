@@ -32,16 +32,15 @@ opt-it-modules/
 │   │   │   ├── subnets/                ← Public + private subnets + route tables
 │   │   │   └── security-groups/        ← Web, database, internal SGs
 │   │   ├── compute/
-│   │   │   ├── ec2/                    ← EC2 instance + EBS volume
-│   │   │   └── eks/                    ← (Phase 2)
+│   │   │   └── ec2/                    ← EC2 instance + EBS volume
 │   │   ├── storage/
 │   │   │   └── s3/                     ← S3 bucket + encryption + versioning
 │   │   ├── database/
 │   │   │   └── rds/                    ← RDS instance (MySQL / PostgreSQL)
 │   │   └── iam/
 │   │       └── baseline/               ← EC2 role + instance profile + SSM + CW
-│   ├── azure/                          ← Phase 2
-│   └── gcp/                            ← Phase 2
+│   ├── azure/                          ← Resource Group, VNet, NSG, VM, Blob Storage, SQL Flexible
+│   └── GCP/                            ← VPC, Firewall, GCE, GCS, Cloud SQL (capital GCP — important)
 │
 ├── cloudformation/
 │   └── aws/
@@ -51,15 +50,31 @@ opt-it-modules/
 │       ├── storage/s3/
 │       └── database/rds/
 │
-├── ansible/
-│   └── aws/                            ← Ansible playbooks for AWS
-│
 ├── cicd/
 │   ├── github-actions/workflows/       ← build.yml, test.yml, deploy.yml
-│   └── jenkins/                        ← Jenkinsfile
+│   ├── jenkins/                        ← Jenkinsfile
+│   ├── gitlab-ci/                      ← .gitlab-ci.yml
+│   └── argocd/base/                    ← application.yaml, app-project.yaml, namespace.yaml
 │
-├── observability/                      ← Phase 3
-└── security/                           ← Phase 4
+├── observability/
+│   ├── prometheus/                     ← prometheus.yml + alert rules (infra + app)
+│   ├── grafana/                        ← grafana.ini + provisioning + dashboards
+│   ├── alertmanager/                   ← alertmanager.yml (Slack + email routing)
+│   ├── docker-compose/                 ← full stack: Prometheus, Grafana, Node Exporter, Alertmanager, Blackbox
+│   └── helm/                           ← Helm chart using Prometheus Community charts
+│
+├── security/
+│   ├── trivy/                          ← trivy.yaml + .trivyignore
+│   ├── github-actions/                 ← trivy-scan.yml (filesystem, image, IaC scans)
+│   └── owasp/
+│       ├── workflow/                   ← dependency-check.yml (fetched to .github/workflows/)
+│       └── config/                     ← suppressions.xml (fetched to security/owasp/)
+│
+└── containers/
+    ├── dockerfiles/                    ← Dockerfile.nodejs, .python, .java, .go (multi-stage)
+    ├── docker-compose/                 ← local dev stack with optional DB and Redis
+    ├── kubernetes/base/                ← Namespace, Deployment, Service, Ingress, HPA, ConfigMap, Secret
+    └── helm/                           ← Helm chart with _helpers.tpl, values.yaml, deployment template
 ```
 
 ---
@@ -356,6 +371,8 @@ url: https://github.com/equaan/opt-it-modules/tree/main/terraform/aws/networking
 
 ### Terraform — GCP
 
+> ⚠️ **Important:** The GCP modules directory uses capital `GCP` — `terraform/GCP/` not `terraform/gcp/`. All Backstage template URLs must use capital GCP exactly or modules will not be found. This is a known gotcha that will silently fail.
+
 | Module | Path | Version | Tag |
 |---|---|---|---|
 | VPC | `terraform/GCP/networking/vpc` | `v1.0.0` | `terraform-gcp-vpc-v1.0.0` |
@@ -364,23 +381,44 @@ url: https://github.com/equaan/opt-it-modules/tree/main/terraform/aws/networking
 | GCS | `terraform/GCP/storage/gcs` | `v1.0.0` | `terraform-gcp-gcs-v1.0.0` |
 | Cloud SQL | `terraform/GCP/database/cloud-sql` | `v1.0.0` | `terraform-gcp-cloud-sql-v1.0.0` |
 
+### CI/CD
+
+| Module | Path | What it provides |
+|---|---|---|
+| GitHub Actions | `cicd/github-actions/workflows/` | `build.yml`, `test.yml`, `deploy.yml` with staging/prod environments and manual prod gate |
+| Jenkins | `cicd/jenkins/` | Declarative `Jenkinsfile` with lint, test, build, deploy stages and manual prod approval |
+| GitLab CI | `cicd/gitlab-ci/` | `.gitlab-ci.yml` with Docker build, unit tests, coverage, staging/prod deploy |
+| ArgoCD | `cicd/argocd/base/` | `application.yaml`, `app-project.yaml`, `namespace.yaml` — GitOps with prune + self-heal |
+
+### Observability
+
+| Module | Path | What it provides |
+|---|---|---|
+| Prometheus | `observability/prometheus/` | `prometheus.yml` scrape config + infra alerts (CPU, memory, disk, instance down) + app alerts (HTTP errors, latency, endpoint) |
+| Grafana | `observability/grafana/` | `grafana.ini`, auto-provisioned Prometheus datasource, infrastructure overview dashboard |
+| Alertmanager | `observability/alertmanager/` | Slack + email routing, critical vs warning channels, inhibit rules |
+| Docker Compose | `observability/docker-compose/` | Full stack: Prometheus, Grafana, Node Exporter, Alertmanager, Blackbox Exporter |
+| Helm | `observability/helm/` | Helm chart using Prometheus Community + Grafana charts |
+
 ### Security
 
 | Module | Path | Purpose |
 |---|---|---|
-| Trivy Config | `security/trivy/` | Vulnerability scanning config |
-| Trivy Workflow | `security/github-actions/` | GitHub Actions scan workflow |
-| OWASP Workflow | `security/owasp/workflow/` | Dependency check workflow |
-| OWASP Config | `security/owasp/config/` | Suppressions config |
+| Trivy Config | `security/trivy/` | `trivy.yaml` config + `.trivyignore` for CVE suppressions |
+| Trivy Workflow | `security/github-actions/` | `trivy-scan.yml` — filesystem, container image, IaC scans with SARIF upload to GitHub Security |
+| OWASP Workflow | `security/owasp/workflow/` | `dependency-check.yml` — fetched to `.github/workflows/` — weekly NVD dependency scan |
+| OWASP Config | `security/owasp/config/` | `suppressions.xml` — fetched to `security/owasp/` — false positive suppressions |
+
+> ⚠️ The OWASP folder is split into `workflow/` and `config/` subfolders deliberately. This allows each to be fetched independently to different `targetPath` values in the template. Do not merge them back into one folder.
 
 ### Containers
 
 | Module | Path | Purpose |
 |---|---|---|
-| Dockerfiles | `containers/dockerfiles/` | Node.js, Python, Java, Go multi-stage builds |
-| Docker Compose | `containers/docker-compose/` | Local dev stack |
+| Dockerfiles | `containers/dockerfiles/` | Multi-stage Dockerfiles for Node.js, Python, Java, Go — non-root user, health checks |
+| Docker Compose | `containers/docker-compose/` | Local dev stack with optional PostgreSQL/MySQL and Redis |
 | Kubernetes | `containers/kubernetes/base/` | Namespace, Deployment, Service, Ingress, HPA, ConfigMap, Secret |
-| Helm | `containers/helm/` | Helm chart wrapping K8s manifests |
+| Helm | `containers/helm/` | Full Helm chart with `_helpers.tpl`, `values.yaml`, deployment template |
 
 ---
 
@@ -446,6 +484,9 @@ RDS instances, S3 buckets with data, and VPCs should have `lifecycle { prevent_d
 **Exposing sensitive outputs without marking them sensitive**
 RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in `outputs.tf` to prevent them appearing in logs.
 
+**Using lowercase `gcp` in template URLs**
+The GCP modules directory is `terraform/GCP/` with a capital G. Using `terraform/gcp/` in template URLs will silently fail — modules won't be fetched and the client repo will be missing them.
+
 ---
 
 ## Phase Roadmap
@@ -454,7 +495,7 @@ RDS endpoints, passwords, and private IPs should be marked `sensitive = true` in
 |---|---|---|
 | Phase 1 | ✅ Complete | AWS Terraform modules (VPC, Subnets, SGs, EC2, S3, RDS, IAM) |
 | Phase 2 | ✅ Complete | Azure Terraform modules (Resource Group, VNet, NSG, VM, Blob, SQL Flexible) |
-| Phase 2b | ✅ Complete | GCP Terraform modules + GcpResourcePicker + gcp-infrastructure template |
+| Phase 2b | ✅ Complete | GCP Terraform modules (VPC, Firewall, GCE, GCS, Cloud SQL) |
 | Phase 3 | ✅ Complete | CI/CD modules (GitHub Actions, Jenkins, GitLab CI, ArgoCD) + Observability (Prometheus, Grafana, Alertmanager) |
-| Phase 4 | ✅ Complete | Security (Trivy, OWASP) + Containers (Dockerfile, Docker Compose, K8s, Helm) |
-| Phase 5 | ✅ Complete | Full Client Onboarding Wizard — single template combining all phases |
+| Phase 4 | ✅ Complete | Security (Trivy, OWASP) + Containers (Dockerfile, Docker Compose, Kubernetes, Helm) |
+| Phase 5 | ✅ Complete | Full Client Onboarding Wizard — consumed by opt-it-catalog |
